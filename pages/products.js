@@ -1,22 +1,17 @@
-import React from "react";
-import { useRouter } from "next/router";
-import braintree from "braintree-web";
+// pages/product.js
+
+import React, { useState } from "react";
+import { useSession } from "next-auth/client";
 import DropIn from "braintree-web-drop-in-react";
 import { toast } from "react-toastify";
+import { config } from "../config";
 
 const Product = () => {
-  const [clientToken, setClientToken] = React.useState(null);
-  const [showDropIn, setShowDropIn] = React.useState(false);
-  const [nonce, setNonce] = React.useState(null);
-  const [loading, setLoading] = React.useState(false);
-
-  const router = useRouter();
-
-  React.useEffect(() => {
-    fetch("/api/braintree/token")
-      .then((res) => res.json())
-      .then((data) => setClientToken(data.clientToken));
-  }, []);
+  const [session] = useSession();
+  const [clientToken, setClientToken] = useState(null);
+  const [showDropIn, setShowDropIn] = useState(false);
+  const [nonce, setNonce] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handlePayment = async () => {
     setLoading(true);
@@ -25,7 +20,7 @@ const Product = () => {
       setNonce(nonce);
       setLoading(false);
       toast.success("Payment successful!");
-      router.push("/");
+      // Add code to submit the nonce to your backend for processing
     } catch (error) {
       setLoading(false);
       toast.error("Payment failed. Please try again.");
@@ -33,7 +28,7 @@ const Product = () => {
   };
 
   const handleCancel = () => {
-    router.push("/");
+    setShowDropIn(false);
   };
 
   const handleReady = async (instance) => {
@@ -42,21 +37,42 @@ const Product = () => {
 
   let dropinInstance;
 
+  const loadBraintreeClientToken = async () => {
+    try {
+      const response = await fetch("/api/braintree/token");
+      if (response.ok) {
+        const { clientToken } = await response.json();
+        setClientToken(clientToken);
+      } else {
+        throw new Error("Failed to load Braintree client token");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load Braintree client token");
+    }
+  };
+
+  React.useEffect(() => {
+    if (session) {
+      loadBraintreeClientToken();
+    }
+  }, [session]);
+
+  if (!session) {
+    return <div>Please sign in to view this page.</div>;
+  }
+
   return (
     <div>
       <h1>Product Page</h1>
       <p>Product Details</p>
       <button onClick={() => setShowDropIn(true)}>Checkout</button>
       {showDropIn && (
-        <DropIn
-          options={{ authorization: clientToken }}
-          onInstance={handleReady}
-        />
-      )}
-      {nonce && (
         <div>
-          <h2>Nonce:</h2>
-          <p>{nonce}</p>
+          <DropIn
+            options={{ authorization: clientToken }}
+            onInstance={handleReady}
+          />
           <button onClick={handleCancel}>Cancel</button>
           <button onClick={handlePayment} disabled={loading}>
             {loading ? "Processing Payment..." : "Submit Payment"}
