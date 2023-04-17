@@ -1,5 +1,3 @@
-// pages/product.js
-
 import React, { useState } from "react";
 import { useSession } from "next-auth/client";
 import DropIn from "braintree-web-drop-in-react";

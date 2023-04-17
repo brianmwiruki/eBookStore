@@ -3,9 +3,9 @@
 export const config = {
     braintree: {
       environment: "sandbox", // or "production"
-      merchantId: "YOUR_MERCHANT_ID",
-      publicKey: "YOUR_PUBLIC_KEY",
-      privateKey: "YOUR_PRIVATE_KEY",
+      merchantId: "pndgx98qz2bspnbm",
+      publicKey: "fgv4dd79kswm2sq4",
+      privateKey: "9199e4d269b282efe545b0020ee8b5b3",
     },
   };
   
